@@ -1,10 +1,9 @@
 /**
  * 小红书图片模板定义
  * 封面模板 8 套 + 内容模板 8 套
- * 大标题 · 撑满 · 吸引眼球
+ * 大标题 · 垂直居中 · 填满封面
  */
 
-// 字体常量
 const FONTS = {
   sans: '"Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
   serif: '"Noto Serif SC", Georgia, "Songti SC", "SimSun", serif',
@@ -14,17 +13,23 @@ const FONTS = {
   liujian: '"Liu Jian Mao Cao", cursive',
 };
 
-// 自动计算标题字号：根据字符数自适应，让标题撑满封面
-// 画布 1080px 宽，可用约 920-960px，中文字符宽度约等于字号
-function calcTitleSize(title, minSize, maxSize) {
+/**
+ * 根据标题字数计算字号
+ * 画布 1080×1440，标题区约 920px 宽
+ * 中文字符宽度 ≈ 字号，每行能放 920/字号 个字
+ */
+function calcTitleSize(title) {
   const len = title.length;
-  // 短标题：超大字
-  if (len <= 6) return maxSize;
-  if (len <= 10) return Math.max(minSize, maxSize - (len - 6) * 4);
-  if (len <= 16) return Math.max(minSize, maxSize - 20 - (len - 10) * 3);
-  if (len <= 24) return Math.max(minSize, maxSize - 44 - (len - 16) * 2);
-  if (len <= 32) return Math.max(minSize, maxSize - 60 - (len - 24) * 1.5);
-  return minSize;
+  if (len <= 4)  return 120;
+  if (len <= 6)  return 105;
+  if (len <= 8)  return 95;
+  if (len <= 10) return 88;
+  if (len <= 14) return 78;
+  if (len <= 18) return 70;
+  if (len <= 22) return 64;
+  if (len <= 28) return 58;
+  if (len <= 35) return 52;
+  return 46;
 }
 
 const XHS_TEMPLATES = {
@@ -36,34 +41,44 @@ const XHS_TEMPLATES = {
       name: '简约白',
       render(title, articleInfo) {
         const page = createBasePage('#FFFFFF');
-        const fs = calcTitleSize(title, 58, 110);
+        const fs = calcTitleSize(title);
 
+        // 顶部淡色渐变
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:0;left:0;right:0;height:120px;background:linear-gradient(180deg, #f8f8f8 0%, transparent 100%);`
+          style: 'position:absolute;top:0;left:0;right:0;height:100px;background:linear-gradient(180deg, #f5f5f5 0%, transparent 100%);'
         }));
 
+        // 小红书标记
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:70px;left:60px;font-size:15px;font-weight:700;color:#FF2442;letter-spacing:3px;font-family:${FONTS.sans};`
+          style: `position:absolute;top:60px;left:60px;font-size:14px;font-weight:700;color:#FF2442;letter-spacing:3px;font-family:${FONTS.sans};`
         }, '📕 小红书'));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:190px;left:60px;width:60px;height:6px;background:#FF2442;border-radius:3px;`
+        // ===== 垂直居中的标题块 =====
+        const block = createEl('div', {
+          style: `position:absolute;top:50%;left:60px;right:60px;transform:translateY(-55%);display:flex;flex-direction:column;`
+        });
+
+        // 红色装饰线
+        block.appendChild(createEl('div', {
+          style: 'width:60px;height:6px;background:#FF2442;border-radius:3px;margin-bottom:30px;'
         }));
 
-        // 标题 - 撑满
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:230px;left:60px;right:60px;font-size:${fs}px;font-weight:900;color:#111;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};letter-spacing:1px;`
+        // 标题
+        block.appendChild(createEl('div', {
+          style: `font-size:${fs}px;font-weight:900;color:#111;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};letter-spacing:1px;`
         }, title));
 
-        page.appendChild(buildStatsBar(articleInfo, {
-          position: 'absolute', bottom: '100px', left: '80px',
-          valueColor: '#FF2442', labelColor: '#aaa'
+        // 统计 - 紧跟标题下方，有间距
+        block.appendChild(createEl('div', {
+          style: 'margin-top:40px;display:flex;gap:40px;'
         }));
+        const statsContainer = createEl('div', { style: 'margin-top:40px;display:flex;gap:40px;' });
+        statsContainer.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#FF2442'));
+        statsContainer.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#FF2442'));
+        statsContainer.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#FF2442'));
+        block.appendChild(statsContainer);
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;bottom:80px;left:80px;right:80px;height:1px;background:#eee;`
-        }));
-
+        page.appendChild(block);
         return page;
       }
     },
@@ -74,33 +89,35 @@ const XHS_TEMPLATES = {
       name: '渐变醒目',
       render(title, articleInfo) {
         const page = createBasePage('linear-gradient(145deg, #FF416C 0%, #FF4B2B 40%, #FF8C42 100%)');
-        const fs = calcTitleSize(title, 56, 100);
+        const fs = calcTitleSize(title);
 
+        // 装饰圆
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:-120px;right:-100px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,0.1);`
+          style: 'position:absolute;top:-120px;right:-100px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,0.1);'
         }));
         page.appendChild(createEl('div', {
-          style: `position:absolute;bottom:-80px;left:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,0.08);`
+          style: 'position:absolute;bottom:-80px;left:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,0.08);'
         }));
 
+        // 标记
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:60px;left:70px;font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:4px;font-weight:600;font-family:${FONTS.sans};`
+          style: `position:absolute;top:60px;left:60px;font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:4px;font-weight:600;font-family:${FONTS.sans};`
         }, 'XIAOHONGSHU'));
 
-        // 标题
-        const titleWrap = createEl('div', {
-          style: `position:absolute;top:50%;left:70px;right:70px;transform:translateY(-55%);`
+        // 垂直居中标题块
+        const block = createEl('div', {
+          style: 'position:absolute;top:50%;left:60px;right:60px;transform:translateY(-50%);'
         });
-        titleWrap.appendChild(createEl('div', {
+        block.appendChild(createEl('div', {
           style: `font-size:${fs}px;font-weight:900;color:#fff;line-height:1.15;word-break:break-word;text-shadow:0 3px 12px rgba(0,0,0,0.15);font-family:${FONTS.sans};letter-spacing:1px;`
         }, title));
-        page.appendChild(titleWrap);
 
-        page.appendChild(buildStatsBar(articleInfo, {
-          position: 'absolute', bottom: '90px', left: '70px',
-          valueColor: '#fff', labelColor: 'rgba(255,255,255,0.7)'
-        }));
-
+        const statsContainer = createEl('div', { style: 'margin-top:40px;display:flex;gap:40px;' });
+        statsContainer.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#fff'));
+        statsContainer.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#fff'));
+        statsContainer.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#fff'));
+        block.appendChild(statsContainer);
+        page.appendChild(block);
         return page;
       }
     },
@@ -111,54 +128,54 @@ const XHS_TEMPLATES = {
       name: '暗黑高级',
       render(title, articleInfo) {
         const page = createBasePage('linear-gradient(170deg, #0c0c1d 0%, #1a1a2e 40%, #0f3460 100%)');
-        const fs = calcTitleSize(title, 56, 100);
+        const fs = calcTitleSize(title);
 
+        // 网格纹理
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);background-size:80px 80px;`
+          style: 'position:absolute;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);background-size:80px 80px;'
         }));
 
+        // 金色光晕
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:20%;left:50%;transform:translate(-50%,-30%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle, rgba(255,184,0,0.12) 0%, transparent 60%);`
+          style: 'position:absolute;top:30%;left:50%;transform:translate(-50%,-30%);width:500px;height:500px;border-radius:50%;background:radial-gradient(circle, rgba(255,184,0,0.12) 0%, transparent 60%);'
         }));
 
-        const topBar = createEl('div', {
-          style: `position:absolute;top:60px;left:80px;display:flex;align-items:center;gap:12px;`
-        });
+        // 标记
+        const topBar = createEl('div', { style: 'position:absolute;top:60px;left:60px;display:flex;align-items:center;gap:10px;' });
         topBar.appendChild(createEl('div', { style: 'width:8px;height:8px;border-radius:50%;background:#FFB800;' }));
-        topBar.appendChild(createEl('div', {
-          style: `font-size:12px;color:rgba(255,184,0,0.6);letter-spacing:4px;font-weight:600;font-family:${FONTS.sans};`
-        }, 'PREMIUM'));
+        topBar.appendChild(createEl('div', { style: `font-size:11px;color:rgba(255,184,0,0.5);letter-spacing:4px;font-weight:600;font-family:${FONTS.sans};` }, 'PREMIUM'));
         page.appendChild(topBar);
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:180px;left:80px;width:50px;height:3px;background:linear-gradient(90deg, #FFB800, #FF6B35);border-radius:2px;`
+        // 垂直居中标题块
+        const block = createEl('div', {
+          style: 'position:absolute;top:50%;left:60px;right:60px;transform:translateY(-50%);'
+        });
+
+        // 金色短线
+        block.appendChild(createEl('div', {
+          style: 'width:50px;height:3px;background:linear-gradient(90deg, #FFB800, #FF6B35);border-radius:2px;margin-bottom:28px;'
         }));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:210px;left:60px;right:60px;font-size:${fs}px;font-weight:900;color:#fff;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};letter-spacing:1px;`
+        block.appendChild(createEl('div', {
+          style: `font-size:${fs}px;font-weight:900;color:#fff;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};letter-spacing:1px;`
         }, title));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;bottom:200px;left:80px;right:80px;height:1px;background:linear-gradient(90deg, transparent, rgba(255,184,0,0.25), transparent);`
-        }));
-
-        const statsBar = createEl('div', {
-          style: `position:absolute;bottom:110px;left:80px;right:80px;display:flex;gap:12px;justify-content:center;`
-        });
+        // 底部统计徽章
+        const statsContainer = createEl('div', { style: 'margin-top:36px;display:flex;gap:10px;justify-content:center;' });
         [
           { label: '字数', value: articleInfo.charCount },
           { label: '阅读', value: articleInfo.readingTime + 'min' },
           { label: '图片', value: articleInfo.imageCount + '张' }
         ].forEach(item => {
           const badge = createEl('div', {
-            style: 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,184,0,0.15);border-radius:20px;padding:8px 20px;display:flex;align-items:center;gap:8px;'
+            style: 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,184,0,0.15);border-radius:20px;padding:8px 18px;display:flex;align-items:center;gap:8px;'
           });
-          badge.appendChild(createEl('span', { style: 'font-size:16px;font-weight:600;color:#FFB800;' }, String(item.value)));
+          badge.appendChild(createEl('span', { style: 'font-size:15px;font-weight:600;color:#FFB800;' }, String(item.value)));
           badge.appendChild(createEl('span', { style: 'font-size:11px;color:rgba(255,255,255,0.5);' }, item.label));
-          statsBar.appendChild(badge);
+          statsContainer.appendChild(badge);
         });
-        page.appendChild(statsBar);
-
+        block.appendChild(statsContainer);
+        page.appendChild(block);
         return page;
       }
     },
@@ -169,47 +186,45 @@ const XHS_TEMPLATES = {
       name: '卡片杂志',
       render(title, articleInfo) {
         const page = createBasePage('#EDE8E0');
-        const fs = calcTitleSize(title, 52, 90);
+        const fs = calcTitleSize(title);
+        // 卡片内字体稍小一点
+        const cardFs = Math.max(46, fs - 10);
 
         const card = createEl('div', {
-          style: `position:absolute;top:80px;left:70px;right:70px;bottom:80px;background:#fff;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,0.07);overflow:hidden;display:flex;flex-direction:column;`
+          style: 'position:absolute;top:80px;left:60px;right:60px;bottom:80px;background:#fff;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,0.07);overflow:hidden;display:flex;flex-direction:column;'
         });
 
+        // 顶部彩条
         card.appendChild(createEl('div', {
           style: 'height:10px;background:linear-gradient(90deg, #FF2442, #FF6B6B, #FFA726);flex-shrink:0;'
         }));
 
+        // 内容区 - 垂直居中
         const content = createEl('div', {
           style: 'flex:1;padding:40px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;'
         });
 
         content.appendChild(createEl('div', {
-          style: `font-size:80px;color:#FF2442;opacity:0.12;font-family:Georgia,serif;line-height:1;margin-bottom:8px;`
-        }, '"'));
+          style: `font-size:80px;color:#FF2442;opacity:0.1;font-family:Georgia,serif;line-height:1;margin-bottom:8px;`
+        }, '“'));
 
         content.appendChild(createEl('div', {
-          style: `font-size:${fs}px;font-weight:900;color:#1a1a1a;line-height:1.15;word-break:break-word;margin-bottom:36px;font-family:${FONTS.serif};letter-spacing:0.5px;`
+          style: `font-size:${cardFs}px;font-weight:900;color:#1a1a1a;line-height:1.15;word-break:break-word;margin-bottom:30px;font-family:${FONTS.serif};letter-spacing:0.5px;`
         }, title));
 
+        // 分隔线
         content.appendChild(createEl('div', {
-          style: 'width:40px;height:3px;background:#FF2442;border-radius:2px;margin-bottom:30px;'
+          style: 'width:40px;height:3px;background:#FF2442;border-radius:2px;margin-bottom:24px;'
         }));
 
+        // 统计
         const statsRow = createEl('div', { style: 'display:flex;gap:36px;justify-content:center;' });
-        [
-          { label: '字数', value: articleInfo.charCount },
-          { label: '阅读', value: articleInfo.readingTime + '分钟' },
-          { label: '图片', value: articleInfo.imageCount + '张' }
-        ].forEach(item => {
-          const stat = createEl('div', { style: 'text-align:center;' });
-          stat.appendChild(createEl('div', { style: 'font-size:20px;font-weight:700;color:#FF2442;' }, String(item.value)));
-          stat.appendChild(createEl('div', { style: 'font-size:11px;color:#aaa;margin-top:2px;' }, item.label));
-          statsRow.appendChild(stat);
-        });
+        statsRow.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#FF2442'));
+        statsRow.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#FF2442'));
+        statsRow.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#FF2442'));
         content.appendChild(statsRow);
         card.appendChild(content);
         page.appendChild(card);
-
         return page;
       }
     },
@@ -220,36 +235,45 @@ const XHS_TEMPLATES = {
       name: 'Claude 暖橙',
       render(title, articleInfo) {
         const page = createBasePage('#FAF7F2');
-        const fs = calcTitleSize(title, 56, 100);
+        const fs = calcTitleSize(title);
 
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:0;right:0;width:600px;height:600px;background:radial-gradient(circle, rgba(193,95,60,0.06) 0%, transparent 60%);`
+          style: 'position:absolute;top:0;right:0;width:600px;height:600px;background:radial-gradient(circle, rgba(193,95,60,0.06) 0%, transparent 60%);'
         }));
         page.appendChild(createEl('div', {
-          style: `position:absolute;bottom:0;left:0;width:500px;height:500px;background:radial-gradient(circle, rgba(232,168,124,0.06) 0%, transparent 60%);`
-        }));
-
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg, #C15F3C, #E8A87C);`
+          style: 'position:absolute;bottom:0;left:0;width:500px;height:500px;background:radial-gradient(circle, rgba(232,168,124,0.06) 0%, transparent 60%);'
         }));
 
+        // 顶条
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:80px;left:80px;font-size:12px;color:#C15F3C;letter-spacing:4px;font-weight:600;font-family:${FONTS.sans};`
+          style: 'position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg, #C15F3C, #E8A87C);'
+        }));
+
+        // 标记
+        page.appendChild(createEl('div', {
+          style: `position:absolute;top:60px;left:60px;font-size:12px;color:#C15F3C;letter-spacing:4px;font-weight:600;font-family:${FONTS.sans};`
         }, '✦ NOTES'));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:130px;left:80px;right:80px;height:4px;background:linear-gradient(90deg, #C15F3C, #E8A87C, transparent);border-radius:2px;`
+        // 垂直居中标题块
+        const block = createEl('div', {
+          style: 'position:absolute;top:50%;left:60px;right:60px;transform:translateY(-50%);'
+        });
+
+        // 渐变线
+        block.appendChild(createEl('div', {
+          style: 'width:100%;height:4px;background:linear-gradient(90deg, #C15F3C, #E8A87C, transparent);border-radius:2px;margin-bottom:28px;'
         }));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:180px;left:60px;right:60px;font-size:${fs}px;font-weight:700;color:#2C1810;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};letter-spacing:0.5px;`
+        block.appendChild(createEl('div', {
+          style: `font-size:${fs}px;font-weight:700;color:#2C1810;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};letter-spacing:0.5px;`
         }, title));
 
-        page.appendChild(buildStatsBar(articleInfo, {
-          position: 'absolute', bottom: '100px', left: '80px',
-          valueColor: '#C15F3C', labelColor: '#b5a08a'
-        }));
-
+        const statsContainer = createEl('div', { style: 'margin-top:36px;display:flex;gap:40px;' });
+        statsContainer.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#C15F3C'));
+        statsContainer.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#C15F3C'));
+        statsContainer.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#C15F3C'));
+        block.appendChild(statsContainer);
+        page.appendChild(block);
         return page;
       }
     },
@@ -260,38 +284,42 @@ const XHS_TEMPLATES = {
       name: '金融时报',
       render(title, articleInfo) {
         const page = createBasePage('#FFF8EE');
-        const fs = calcTitleSize(title, 50, 90);
+        const fs = calcTitleSize(title);
 
+        // 顶条
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:0;left:0;right:0;height:6px;background:#990F3D;`
+          style: 'position:absolute;top:0;left:0;right:0;height:6px;background:#990F3D;'
         }));
 
-        page.appendChild(createEl('div', { style: 'position:absolute;top:60px;left:60px;right:60px;bottom:60px;border:2px solid #990F3D;' }));
-        page.appendChild(createEl('div', { style: 'position:absolute;top:68px;left:68px;right:68px;bottom:68px;border:1px solid rgba(153,15,61,0.2);' }));
+        // 双线框
+        page.appendChild(createEl('div', { style: 'position:absolute;top:50px;left:50px;right:50px;bottom:50px;border:2px solid #990F3D;' }));
+        page.appendChild(createEl('div', { style: 'position:absolute;top:58px;left:58px;right:58px;bottom:58px;border:1px solid rgba(153,15,61,0.2);' }));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:160px;left:300px;right:300px;height:1px;background:#990F3D;`
+        // 垂直居中标题块
+        const block = createEl('div', {
+          style: 'position:absolute;top:50%;left:100px;right:100px;transform:translateY(-50%);text-align:center;'
+        });
+
+        // 上装饰线
+        block.appendChild(createEl('div', {
+          style: 'margin:0 auto 20px;width:60%;height:1px;background:#990F3D;'
         }));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:190px;left:90px;right:90px;font-size:${fs}px;font-weight:700;color:#33302E;line-height:1.15;word-break:break-word;text-align:center;font-family:${FONTS.serif};`
+        block.appendChild(createEl('div', {
+          style: `font-size:${fs}px;font-weight:700;color:#33302E;line-height:1.15;word-break:break-word;font-family:${FONTS.serif};`
         }, title));
 
-        const statsBar = createEl('div', {
-          style: `position:absolute;bottom:120px;left:100px;right:100px;display:flex;justify-content:center;gap:50px;`
-        });
-        [
-          { label: '字数', value: articleInfo.charCount },
-          { label: '阅读', value: articleInfo.readingTime + '分钟' },
-          { label: '图片', value: articleInfo.imageCount + '张' }
-        ].forEach(item => {
-          const stat = createEl('div', { style: 'text-align:center;' });
-          stat.appendChild(createEl('div', { style: 'font-size:20px;font-weight:700;color:#990F3D;' }, String(item.value)));
-          stat.appendChild(createEl('div', { style: 'font-size:11px;color:#8a7a6a;margin-top:2px;font-family:Georgia,serif;' }, item.label));
-          statsBar.appendChild(stat);
-        });
-        page.appendChild(statsBar);
+        // 下装饰线
+        block.appendChild(createEl('div', {
+          style: 'margin:20px auto 0;width:60%;height:1px;background:#990F3D44;'
+        }));
 
+        const statsContainer = createEl('div', { style: 'margin-top:28px;display:flex;justify-content:center;gap:50px;' });
+        statsContainer.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#990F3D'));
+        statsContainer.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#990F3D'));
+        statsContainer.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#990F3D'));
+        block.appendChild(statsContainer);
+        page.appendChild(block);
         return page;
       }
     },
@@ -302,37 +330,41 @@ const XHS_TEMPLATES = {
       name: '高迪·彩虹',
       render(title, articleInfo) {
         const page = createBasePage('#FEFEFE');
-        const fs = calcTitleSize(title, 54, 95);
+        const fs = calcTitleSize(title);
 
+        // 彩色渐变背景
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg, rgba(255,107,107,0.06) 0%, rgba(255,217,61,0.06) 25%, rgba(107,207,127,0.06) 50%, rgba(78,205,196,0.06) 75%, rgba(91,134,229,0.06) 100%);`
+          style: 'position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg, rgba(255,107,107,0.06) 0%, rgba(255,217,61,0.06) 25%, rgba(107,207,127,0.06) 50%, rgba(78,205,196,0.06) 75%, rgba(91,134,229,0.06) 100%);'
         }));
 
+        // 装饰圆
         page.appendChild(createEl('div', { style: 'position:absolute;top:-80px;right:-80px;width:350px;height:350px;border-radius:50%;background:linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,217,61,0.2));' }));
         page.appendChild(createEl('div', { style: 'position:absolute;bottom:-60px;left:-60px;width:280px;height:280px;border-radius:50%;background:linear-gradient(135deg, rgba(78,205,196,0.2), rgba(91,134,229,0.2));' }));
 
+        // 彩色顶条
         page.appendChild(createEl('div', {
           style: 'position:absolute;top:0;left:0;right:0;height:8px;background:linear-gradient(90deg, #ff6b6b, #ffd93d, #6bcf7f, #4ecdc4, #5b86e5, #a55eea);'
         }));
 
+        // 垂直居中标题卡片
         const card = createEl('div', {
-          style: `position:absolute;top:50%;left:70px;right:70px;transform:translateY(-55%);background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);border-radius:24px;padding:50px;box-shadow:0 8px 40px rgba(0,0,0,0.04);`
+          style: 'position:absolute;top:50%;left:60px;right:60px;transform:translateY(-50%);background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);border-radius:24px;padding:44px;box-shadow:0 8px 40px rgba(0,0,0,0.04);'
         });
 
         card.appendChild(createEl('div', {
-          style: 'width:50px;height:4px;background:linear-gradient(90deg, #ff6b6b, #a55eea);border-radius:2px;margin-bottom:30px;'
+          style: 'width:50px;height:4px;background:linear-gradient(90deg, #ff6b6b, #a55eea);border-radius:2px;margin-bottom:28px;'
         }));
 
         card.appendChild(createEl('div', {
           style: `font-size:${fs}px;font-weight:900;background:linear-gradient(135deg, #ff6b6b, #a55eea);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.15;word-break:break-word;font-family:${FONTS.sans};`
         }, title));
+
+        const statsContainer = createEl('div', { style: 'margin-top:32px;display:flex;gap:40px;' });
+        statsContainer.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#5b86e5'));
+        statsContainer.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#5b86e5'));
+        statsContainer.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#5b86e5'));
+        card.appendChild(statsContainer);
         page.appendChild(card);
-
-        page.appendChild(buildStatsBar(articleInfo, {
-          position: 'absolute', bottom: '90px', left: '70px',
-          valueColor: '#5b86e5', labelColor: '#aaa'
-        }));
-
         return page;
       }
     },
@@ -343,33 +375,38 @@ const XHS_TEMPLATES = {
       name: '书法雅韵',
       render(title, articleInfo) {
         const page = createBasePage('#F7F3EB');
-        const fs = calcTitleSize(title, 60, 110);
+        const fs = calcTitleSize(title);
 
+        // 水墨装饰
         page.appendChild(createEl('div', {
           style: 'position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 20% 20%, rgba(0,0,0,0.02) 0%, transparent 50%);'
         }));
 
+        // 印章
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:70px;right:80px;width:50px;height:50px;border:2px solid #C0392B;color:#C0392B;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;font-family:${FONTS.mashan};border-radius:4px;transform:rotate(-5deg);`
+          style: `position:absolute;top:70px;right:60px;width:50px;height:50px;border:2px solid #C0392B;color:#C0392B;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;font-family:${FONTS.mashan};border-radius:4px;transform:rotate(-5deg);`
         }, '文'));
 
+        // 竖线装饰
         page.appendChild(createEl('div', {
-          style: `position:absolute;top:120px;left:80px;width:2px;height:80px;background:linear-gradient(180deg, #8B4513, transparent);`
+          style: 'position:absolute;top:120px;left:60px;width:2px;height:80px;background:linear-gradient(180deg, #8B4513, transparent);'
         }));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;top:240px;left:60px;right:60px;font-size:${fs}px;font-weight:400;color:#2C1810;line-height:1.2;word-break:break-word;font-family:${FONTS.xiaowei};letter-spacing:2px;`
+        // 垂直居中标题块
+        const block = createEl('div', {
+          style: 'position:absolute;top:50%;left:60px;right:60px;transform:translateY(-50%);'
+        });
+
+        block.appendChild(createEl('div', {
+          style: `font-size:${fs}px;font-weight:400;color:#2C1810;line-height:1.2;word-break:break-word;font-family:${FONTS.xiaowei};letter-spacing:2px;`
         }, title));
 
-        page.appendChild(createEl('div', {
-          style: `position:absolute;bottom:200px;left:80px;right:80px;height:1px;background:linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);`
-        }));
-
-        page.appendChild(buildStatsBar(articleInfo, {
-          position: 'absolute', bottom: '100px', left: '80px',
-          valueColor: '#8B4513', labelColor: '#b5a08a'
-        }));
-
+        const statsContainer = createEl('div', { style: 'margin-top:36px;display:flex;gap:40px;' });
+        statsContainer.appendChild(makeStatItem(String(articleInfo.charCount), '字数', '#8B4513'));
+        statsContainer.appendChild(makeStatItem(articleInfo.readingTime + '分钟', '阅读', '#8B4513'));
+        statsContainer.appendChild(makeStatItem(articleInfo.imageCount + '张', '图片', '#8B4513'));
+        block.appendChild(statsContainer);
+        page.appendChild(block);
         return page;
       }
     }
@@ -440,14 +477,7 @@ const XHS_TEMPLATES = {
 
 function createBasePage(background) {
   const page = document.createElement('div');
-  page.style.cssText = `
-    width: 1080px;
-    height: 1440px;
-    position: relative;
-    overflow: hidden;
-    font-family: ${FONTS.sans};
-    background: ${background};
-  `;
+  page.style.cssText = `width:1080px;height:1440px;position:relative;overflow:hidden;font-family:${FONTS.sans};background:${background};`;
   return page;
 }
 
@@ -458,42 +488,25 @@ function createEl(tag, opts, textContent) {
   return el;
 }
 
-function buildStatsBar(articleInfo, opts) {
-  const bar = createEl('div', {
-    style: `position:${opts.position || 'relative'};bottom:${opts.bottom || 'auto'};left:${opts.left || 'auto'};display:flex;gap:40px;`
-  });
-  [
-    { label: '字数', value: articleInfo.charCount },
-    { label: '阅读', value: articleInfo.readingTime + '分钟' },
-    { label: '图片', value: articleInfo.imageCount + '张' }
-  ].forEach(item => {
-    const stat = createEl('div', { style: 'text-align:center;' });
-    stat.appendChild(createEl('div', {
-      style: `font-size:24px;font-weight:700;color:${opts.valueColor || '#FF2442'};margin-bottom:4px;`
-    }, String(item.value)));
-    stat.appendChild(createEl('div', {
-      style: `font-size:12px;color:${opts.labelColor || '#aaa'};`
-    }, item.label));
-    bar.appendChild(stat);
-  });
-  return bar;
+function makeStatItem(value, label, color) {
+  const stat = createEl('div', { style: 'text-align:center;' });
+  stat.appendChild(createEl('div', { style: `font-size:22px;font-weight:700;color:${color};margin-bottom:2px;` }, value));
+  stat.appendChild(createEl('div', { style: `font-size:11px;color:${color}88;` }, label));
+  return stat;
 }
 
 function renderContentPage(templateId, contentElements, pageNum, totalPages) {
   const template = XHS_TEMPLATES.content.find(t => t.id === templateId) || XHS_TEMPLATES.content[0];
   const { colors, padding } = template;
   const page = createBasePage(colors.bg);
-
   const contentArea = createEl('div', {
     style: `position:absolute;top:0;left:0;right:0;bottom:0;padding:${padding};overflow:hidden;`
   });
   contentElements.forEach(el => contentArea.appendChild(el));
   page.appendChild(contentArea);
-
   page.appendChild(createEl('div', {
     style: `position:absolute;bottom:36px;right:70px;font-size:18px;color:${colors.text};opacity:0.3;font-weight:500;`
   }, `${pageNum} / ${totalPages}`));
-
   return page;
 }
 
@@ -501,7 +514,6 @@ function createStyledBlock(templateId, block) {
   const template = XHS_TEMPLATES.content.find(t => t.id === templateId) || XHS_TEMPLATES.content[0];
   const { colors, fontSizes, lineHeight, headingStyle, fontFamily } = template;
   const ff = fontFamily || FONTS.sans;
-
   const el = document.createElement('div');
 
   const processHtml = (html) => {
@@ -509,7 +521,7 @@ function createStyledBlock(templateId, block) {
     return html
       .replace(/<strong>(.*?)<\/strong>/g, `<span style="font-weight:700;color:${colors.accent};">$1</span>`)
       .replace(/<b>(.*?)<\/b>/g, `<span style="font-weight:700;color:${colors.accent};">$1</span>`)
-      .replace(/<em>(.*?)<\/em>/g, `<span style="font-style:italic;">$1</span>`)
+      .replace(/<em>(.*?)<\/em>/g, '<span style="font-style:italic;">$1</span>')
       .replace(/<code>(.*?)<\/code>/g, `<span style="font-family:"SF Mono",Monaco,Consolas,monospace;font-size:0.88em;padding:2px 6px;background:${colors.codeBg};color:${colors.codeText};border-radius:4px;">$1</span>`)
       .replace(/<a\s[^>]*>(.*?)<\/a>/g, `<span style="color:${colors.accent};text-decoration:underline;">$1</span>`);
   };
@@ -556,9 +568,7 @@ function createStyledBlock(templateId, block) {
     case 'li': {
       el.innerHTML = processHtml(block.html || escapeHtml(block.text));
       el.style.cssText = `font-size:${fontSizes.li}px;color:${colors.text};margin:6px 0;padding-left:26px;line-height:${lineHeight};position:relative;font-family:${ff};word-break:break-word;`;
-      const bullet = createEl('span', {
-        style: `position:absolute;left:0;top:0;color:${colors.accent};font-weight:bold;font-size:${fontSizes.li}px;`
-      }, '•');
+      const bullet = createEl('span', { style: `position:absolute;left:0;top:0;color:${colors.accent};font-weight:bold;font-size:${fontSizes.li}px;` }, '•');
       el.insertBefore(bullet, el.firstChild);
       break;
     }
@@ -581,7 +591,6 @@ function createStyledBlock(templateId, block) {
       el.style.cssText = `font-size:${fontSizes.p}px;color:${colors.text};margin:12px 0;line-height:${lineHeight};font-family:${ff};word-break:break-word;`;
     }
   }
-
   return el;
 }
 
