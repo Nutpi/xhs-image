@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小红书图片生成器</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>">
+
+  <!-- Google Fonts - 丰富中文字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=ZCOOL+XiaoWei&family=ZCOOL+QingKe+HuangYou&family=Ma+Shan+Zheng&family=Liu+Jian+Mao+Cao&display=swap" rel="stylesheet">
+
+  <!-- Markdown 渲染库 -->
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.0.0/dist/markdown-it.min.js"></script>
+
+  <!-- html2canvas - 生成图片 -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- Turndown - HTML 转 Markdown（富文本粘贴支持） -->
+  <script src="https://cdn.jsdelivr.net/npm/turndown@7.2.0/dist/turndown.js"></script>
+
+  <!-- Vue.js -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.4.15/dist/vue.global.prod.js"></script>
+
+  <style>
+    :root {
+      --color-primary: #111;
+      --color-secondary: #555;
+      --color-tertiary: #999;
+      --color-accent: #FF2442;
+      --color-accent-light: #FF6B81;
+      --color-accent-bg: #FFF0F3;
+      --color-accent-hover: #E01F3B;
+      --color-bg: #F2F2F7;
+      --color-surface: #FFF;
+      --color-border: #E5E5EA;
+      --color-light-border: #F2F2F7;
+      --font-sans: "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --font-serif: "Noto Serif SC", Georgia, "Times New Roman", "Songti SC", serif;
+      --font-mono: "SF Mono", Monaco, "Cascadia Code", "Consolas", monospace;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--color-primary);
+      background-color: var(--color-bg);
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    [v-cloak] { display: none !important; }
+
+    /* ====== Header ====== */
+    .app-header {
+      height: 52px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      flex-shrink: 0;
+    }
+
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-primary);
+      letter-spacing: -0.3px;
+    }
+
+    .app-logo-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--color-accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: #fff;
+    }
+
+    .app-logo-tag {
+      font-size: 10px;
+      background: var(--color-accent);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    .header-link {
+      color: var(--color-tertiary);
+      text-decoration: none;
+      font-size: 12px;
+      transition: color 150ms;
+    }
+    .header-link:hover { color: var(--color-accent); }
+
+    /* ====== Main Layout ====== */
+    .app-main {
+      display: flex;
+      height: calc(100vh - 52px);
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ====== Editor Panel ====== */
+    .editor-panel {
+      display: flex;
+      flex-direction: column;
+      width: 46%;
+      flex-shrink: 0;
+      flex-grow: 0;
+      background: var(--color-surface);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ====== Preview Panel ====== */
+    .preview-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--color-bg);
+      overflow: hidden;
+      flex: 1;
+      flex-grow: 1;
+      margin: 0;
+      padding: 0;
+      min-width: 0;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 16px;
+      border-bottom: 1px solid var(--color-light-border);
+      flex-shrink: 0;
+    }
+
+    .editor-toolbar-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-secondary);
+    }
+
+    .char-count {
+      font-size: 11px;
+      color: var(--color-tertiary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .editor-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 16px 18px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.75;
+      color: var(--color-primary);
+      background: var(--color-surface);
+      tab-size: 2;
+      overflow-y: scroll;
+      scrollbar-width: thin;
+      scrollbar-color: #ddd transparent;
+    }
+    .editor-textarea::-webkit-scrollbar {
+      width: 6px;
+    }
+    .editor-textarea::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .editor-textarea::-webkit-scrollbar-thumb {
+      background: #ddd;
+      border-radius: 3px;
+    }
+    .editor-textarea::placeholder { color: #ccc; }
+
+    .editor-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--color-light-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .editor-hint {
+      font-size: 11px;
+      color: var(--color-tertiary);
+    }
+
+    .generate-btn {
+      padding: 7px 20px;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 150ms;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      font-family: var(--font-sans);
+    }
+    .generate-btn:hover:not(:disabled) {
+      background: var(--color-accent-hover);
+      box-shadow: 0 4px 12px rgba(255,36,66,0.25);
+    }
+    .generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .generate-btn.generating { background: var(--color-tertiary); }
+
+    /* Template Selectors */
+    .template-section {
+      padding: 8px 14px 6px;
+      border-bottom: 1px solid var(--color-light-border);
+      background: var(--color-surface);
+      flex-shrink: 0;
+    }
+
+    .template-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .template-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-tertiary);
+      white-space: nowrap;
+      min-width: 32px;
+    }
+
+    .template-options {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .template-options::-webkit-scrollbar { display: none; }
+
+    .template-option {
+      padding: 4px 10px;
+      border: 1.5px solid var(--color-border);
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 100ms;
+      background: var(--color-surface);
+      color: var(--color-secondary);
+      white-space: nowrap;
+    }
+    .template-option:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .template-option.active {
+      border-color: var(--color-accent);
+      background: var(--color-accent-bg);
+      color: var(--color-accent);
+    }
+
+    /* Action Bar */
+    .preview-actions {
+      padding: 8px 14px;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-light-border);
+      flex-shrink: 0;
+    }
+
+    .preview-info {
+      font-size: 12px;
+      color: var(--color-secondary);
+      font-weight: 500;
+    }
+
+    .download-all-btn {
+      padding: 5px 14px;
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 120ms;
+      font-family: var(--font-sans);
+    }
+    .download-all-btn:hover:not(:disabled) { opacity: 0.8; }
+    .download-all-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    /* Image Grid */
+    .images-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .image-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+      transition: all 150ms;
+      cursor: pointer;
+      position: relative;
+    }
+    .image-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .image-card .cover-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: var(--color-accent);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 3px;
+      z-index: 1;
+    }
+
+    .image-card img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-card-footer {
+      padding: 5px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .image-card-footer span {
+      font-size: 10px;
+      color: var(--color-tertiary);
+    }
+
+    .download-single-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--color-tertiary);
+      font-size: 12px;
+      padding: 2px;
+      transition: color 100ms;
+    }
+    .download-single-btn:hover { color: var(--color-accent); }
+
+    /* Empty / Loading State */
+    .empty-state, .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--color-tertiary);
+      text-align: center;
+      padding: 40px;
+    }
+    .empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--color-secondary); }
+    .empty-state p { font-size: 12px; max-width: 260px; line-height: 1.6; }
+
+    .loading-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid var(--color-light-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 10000;
+      transition: transform 250ms ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: #10B981; color: #fff; }
+    .toast.error { background: #EF4444; color: #fff; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .app-main { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+      .editor-panel { border-right: none; border-bottom: 1px solid var(--color-border); }
+      .images-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <!-- Header -->
+    <header class="app-header">
+      <div class="app-logo">
+        <span class="app-logo-icon">📕</span>
+        <span>小红书图片生成器</span>
+        <span class="app-logo-tag">NEW</span>
+      </div>
+      <div class="header-actions">
+        <a href="./editor/" class="header-link">公众号排版 →</a>
+      </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="app-main">
+      <!-- Editor Panel -->
+      <div class="editor-panel">
+        <div class="editor-toolbar">
+          <span class="editor-toolbar-title">✏️ Markdown</span>
+          <span class="char-count">{{ charCount }} 字</span>
+        </div>
+        <textarea
+          class="editor-textarea"
+          v-model="markdownInput"
+          placeholder="输入 Markdown，或从飞书/Notion/网页直接粘贴...
+
+# 标题示例
+
+正文支持 **粗体**、*斜体*、`代码` 等格式。
+
+## 二级标题
+
+- 列表项 1
+- 列表项 2
+
+> 引用文字会高亮显示"
+          @input="onInput"
+          @paste="handleSmartPaste"
+          spellcheck="false"
+        ></textarea>
+        <div class="editor-footer">
+          <span class="editor-hint">支持富文本粘贴 · 自动转为 Markdown</span>
+          <button
+            class="generate-btn"
+            :class="{ generating: generating }"
+            :disabled="!markdownInput.trim() || generating"
+            @click="generateImages"
+          >
+            <span v-if="generating">⏳ 生成中...</span>
+            <span v-else>🚀 生成图片</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Panel -->
+      <div class="preview-panel">
+        <!-- Cover Template -->
+        <div class="template-section">
+          <div class="template-row">
+            <span class="template-label">封面</span>
+            <div class="template-options">
+              <div
+                v-for="t in coverTemplates"
+                :key="t.id"
+                class="template-option"
+                :class="{ active: selectedCoverTemplate === t.id }"
+                @click="selectedCoverTemplate = t.id"
+              >{{ t.name }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Template -->
+        <div class="template-section">
+          <div class="template-row">
+            <span class="template-label">内容</span>
+            <div class="template-options">
+              <div
+                v-for="t in contentTemplates"
+                :key="t.id"
+                class="template-option"
+                :class="{ active: selectedContentTemplate === t.id }"
+                @click="selectedContentTemplate = t.id"
+              >{{ t.name }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="preview-actions" v-if="images.length > 0">
+          <span class="preview-info">📷 {{ images.length }} 张图片</span>
+          <button class="download-all-btn" @click="downloadAllImages">⬇ 下载全部</button>
+        </div>
+
+        <!-- Content Area -->
+        <div class="images-container">
+          <div v-if="generating" class="loading-state">
+            <div class="loading-spinner"></div>
+            <span>正在生成图片...</span>
+          </div>
+
+          <div v-else-if="images.length === 0" class="empty-state">
+            <div class="empty-state-icon">📕</div>
+            <h3>还没有生成图片</h3>
+            <p>在左侧输入内容，选择喜欢的封面和内容模板，点击生成</p>
+          </div>
+
+          <div v-else class="images-grid">
+            <div
+              v-for="(image, index) in images"
+              :key="index"
+              class="image-card"
+              @click="downloadImage(image, index)"
+            >
+              <div v-if="index === 0" class="cover-badge">封面</div>
+              <img :src="image.dataUrl" :alt="'第 ' + (index + 1) + ' 张'">
+              <div class="image-card-footer">
+                <span>{{ index === 0 ? '封面' : '第 ' + index + ' 页' }} · {{ index + 1 }}/{{ images.length }}</span>
+                <button class="download-single-btn" @click.stop="downloadImage(image, index)">⬇</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" :class="[toast.type, { show: toast.show }]">{{ toast.message }}</div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/xiaohongshu-templates.js"></script>
+  <script src="js/xiaohongshu-generator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
