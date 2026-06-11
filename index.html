@@ -417,22 +417,24 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Toast */
+    /* Toast - 顶部全宽通知条 */
     .toast {
       position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-80px);
-      padding: 8px 20px;
-      border-radius: var(--radius-sm);
+      top: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      padding: 10px 20px;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
+      text-align: center;
       z-index: 10000;
-      transition: transform 250ms ease;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transform: translateY(-100%);
+      transition: transform 200ms ease;
+      white-space: nowrap;
     }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast.success { background: #10B981; color: #fff; }
+    .toast.show { transform: translateY(0); }
+    .toast.success { background: #333; color: #fff; }
     .toast.error { background: #EF4444; color: #fff; }
 
     /* Responsive */
