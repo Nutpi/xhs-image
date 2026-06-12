@@ -417,23 +417,26 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Toast - 右上角小浮动提示 */
+    /* Toast - 右上角极小提示 */
     .toast {
       position: fixed;
-      top: 60px;
-      right: 20px;
-      padding: 6px 16px;
-      border-radius: 6px;
-      font-size: 12px;
+      top: 56px;
+      right: 12px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 11px;
       font-weight: 500;
       z-index: 10000;
       opacity: 0;
-      transition: opacity 200ms ease;
+      transition: opacity 150ms ease;
       pointer-events: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .toast.show { opacity: 1; }
-    .toast.success { background: #fff; color: #333; border: 1px solid #e0e0e0; }
+    .toast.show { opacity: 0.85; }
+    .toast.success { background: rgba(0,0,0,0.6); color: #fff; }
     .toast.error { background: #EF4444; color: #fff; }
 
     /* Responsive */

@@ -64,13 +64,24 @@ const app = createApp({
     },
     selectedCoverTemplate(val) {
       localStorage.setItem('xhs-cover-template', val);
+      this.autoRegenerate();
     },
     selectedContentTemplate(val) {
       localStorage.setItem('xhs-content-template', val);
+      this.autoRegenerate();
     }
   },
 
   methods: {
+    // ==================== 自动重新生成 ====================
+
+    autoRegenerate() {
+      // 如果有内容且之前已生成过图片，切换模板时自动重新生成
+      if (this.markdownInput.trim() && this.images.length > 0 && !this.generating) {
+        this.generateImages();
+      }
+    },
+
     // ==================== 富文本粘贴 ====================
 
     initTurndownService() {
