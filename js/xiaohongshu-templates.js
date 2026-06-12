@@ -60,9 +60,9 @@ const XHS_TEMPLATES = {
           style: `font-size:${fs}px;font-weight:900;color:#111;line-height:1.3;word-break:break-word;font-family:${FONTS.serif};letter-spacing:1px;`
         }, title));
 
-        // 底部统计 - 小字
+        // 底部统计 - 紧跟标题
         block.appendChild(createEl('div', {
-          style: `margin-top:auto;padding-top:20px;display:flex;gap:30px;font-size:16px;color:#bbb;font-family:${FONTS.sans};`
+          style: `padding-top:24px;display:flex;gap:30px;font-size:16px;color:#bbb;font-family:${FONTS.sans};`
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         page.appendChild(block);
@@ -95,7 +95,7 @@ const XHS_TEMPLATES = {
         }, title));
 
         block.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;display:flex;gap:30px;font-size:16px;color:rgba(255,255,255,0.7);'
+          style: 'padding-top:20px;display:flex;gap:30px;font-size:16px;color:rgba(255,255,255,0.7);'
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         page.appendChild(block);
@@ -130,10 +130,10 @@ const XHS_TEMPLATES = {
         }, title));
 
         block.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;display:flex;gap:12px;justify-content:center;'
+          style: 'padding-top:20px;display:flex;gap:12px;justify-content:center;'
         }));
         const statsLine = createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;display:flex;gap:20px;justify-content:center;font-size:15px;color:rgba(255,184,0,0.5);'
+          style: 'padding-top:20px;display:flex;gap:20px;justify-content:center;font-size:15px;color:rgba(255,184,0,0.5);'
         });
         statsLine.textContent = `${articleInfo.charCount}字 · ${articleInfo.readingTime}min · ${articleInfo.imageCount}图`;
         block.appendChild(statsLine);
@@ -169,7 +169,7 @@ const XHS_TEMPLATES = {
         }, title));
 
         content.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;font-size:14px;color:#ccc;'
+          style: 'padding-top:20px;font-size:14px;color:#ccc;'
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         card.appendChild(content);
@@ -200,7 +200,7 @@ const XHS_TEMPLATES = {
         }, title));
 
         block.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;font-size:15px;color:#bba89a;'
+          style: 'padding-top:20px;font-size:15px;color:#bba89a;'
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         page.appendChild(block);
@@ -234,7 +234,7 @@ const XHS_TEMPLATES = {
         }, title));
 
         block.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;font-size:14px;color:#8a7a6a;font-family:Georgia,serif;'
+          style: 'padding-top:20px;font-size:14px;color:#8a7a6a;font-family:Georgia,serif;'
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         page.appendChild(block);
@@ -273,7 +273,7 @@ const XHS_TEMPLATES = {
         }, title));
 
         block.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;font-size:15px;color:#bbb;'
+          style: 'padding-top:20px;font-size:15px;color:#bbb;'
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         page.appendChild(block);
@@ -303,7 +303,7 @@ const XHS_TEMPLATES = {
         }, title));
 
         block.appendChild(createEl('div', {
-          style: 'margin-top:auto;padding-top:16px;font-size:15px;color:#b5a08a;'
+          style: 'padding-top:20px;font-size:15px;color:#b5a08a;'
         }, `${articleInfo.charCount}字 · ${articleInfo.readingTime}分钟阅读`));
 
         page.appendChild(block);
