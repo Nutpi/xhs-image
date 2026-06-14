@@ -352,14 +352,38 @@ const XHSGenerator = {
   },
 
   /**
-   * 批量下载所有图片
+   * 打包为 ZIP 下载（zip 文件名以标题命名）
    */
-  async downloadAllImages(images) {
-    for (let i = 0; i < images.length; i++) {
-      this.downloadImage(images[i], i, images.length);
-      // 延时避免浏览器阻止
-      await this.wait(400);
+  async downloadAsZip(images, title) {
+    if (typeof JSZip === 'undefined') {
+      throw new Error('JSZip 库未加载');
     }
+    const safeName = this.sanitizeFileName(title || '小红书图片');
+    const zip = new JSZip();
+    images.forEach((image, index) => {
+      const base64 = image.dataUrl.split(',')[1];
+      const fileName = index === 0
+        ? `${safeName}-封面.png`
+        : `${safeName}-第${index}页.png`;
+      zip.file(fileName, base64, { base64: true });
+    });
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `${safeName}.zip`;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  },
+
+  /**
+   * 清理文件名非法字符（\ / : * ? " < > |）
+   */
+  sanitizeFileName(name) {
+    const cleaned = (name || '').replace(/[\\/:*?"<>|]/g, '').trim();
+    return cleaned.slice(0, 50) || '小红书图片';
   },
 
   /**

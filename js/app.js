@@ -296,10 +296,12 @@ const app = createApp({
         this.showToast('没有图片可下载', 'error');
         return;
       }
-      this.showToast(`开始下载 ${this.images.length} 张图片...`, 'success');
+      const m = this.markdownInput.match(/^#\s+(.+)$/m);
+      const title = m ? m[1].trim() : '小红书图片';
+      this.showToast('正在打包为 ZIP...', 'success');
       try {
-        await XHSGenerator.downloadAllImages(this.images);
-        this.showToast('批量下载完成', 'success');
+        await XHSGenerator.downloadAsZip(this.images, title);
+        this.showToast('下载完成', 'success');
       } catch (error) {
         this.showToast('下载失败: ' + error.message, 'error');
       }

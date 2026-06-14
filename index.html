@@ -19,6 +19,9 @@
   <!-- html2canvas - 生成图片 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
+  <!-- JSZip - 打包下载 -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
   <!-- Turndown - HTML 转 Markdown（富文本粘贴支持） -->
   <script src="https://cdn.jsdelivr.net/npm/turndown@7.2.0/dist/turndown.js"></script>
 
@@ -586,7 +589,7 @@
         <!-- Action Bar -->
         <div class="preview-actions" v-if="images.length > 0">
           <span class="preview-info">📷 {{ images.length }} 张图片</span>
-          <button class="download-all-btn" @click="downloadAllImages">⬇ 下载全部</button>
+          <button class="download-all-btn" @click="downloadAllImages">⬇ 下载 ZIP</button>
         </div>
 
         <!-- Content Area -->
