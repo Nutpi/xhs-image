@@ -17,10 +17,12 @@ const XHSGenerator = {
    * @param {function} onProgress - 进度回调 (current, total)
    * @returns {Promise<Array<{dataUrl: string, pageNumber: number, totalPages: number}>>}
    */
-  async generate(markdown, coverTemplateId, contentTemplateId, onProgress) {
+  async generate(markdown, coverTemplateId, contentTemplateId, onProgress, options = {}) {
     if (!markdown || !markdown.trim()) {
       throw new Error('内容为空');
     }
+
+    const watermark = (options.watermark || '').trim();
 
     // 1. 解析 Markdown 为块级元素
     const blocks = this.parseMarkdownToBlocks(markdown);
@@ -50,6 +52,8 @@ const XHSGenerator = {
       // 等待渲染
       await this.wait(200);
 
+      if (watermark) addWatermark(coverElement, watermark, !!coverTemplate.darkBg);
+
       const coverCanvas = await this.captureElement(coverElement);
       images.push({
         dataUrl: coverCanvas.toDataURL('image/png'),
@@ -72,6 +76,12 @@ const XHSGenerator = {
           );
           offscreen.appendChild(pageElement);
           await this.wait(150);
+
+          if (watermark) {
+            const contentTpl = XHS_TEMPLATES.content.find(t => t.id === contentTemplateId) ||
+                               XHS_TEMPLATES.content[0];
+            addWatermark(pageElement, watermark, isColorDark(contentTpl.colors.bg));
+          }
 
           const canvas = await this.captureElement(pageElement);
           images.push({

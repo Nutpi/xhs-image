@@ -15,6 +15,9 @@ const app = createApp({
       // 生成状态
       generating: false,
       images: [],
+      // 水印署名
+      authorName: '',
+      showWatermark: true,
       // 模板列表
       coverTemplates: [],
       contentTemplates: [],
@@ -56,6 +59,12 @@ const app = createApp({
     const savedContent = localStorage.getItem('xhs-content-template');
     if (savedCover) this.selectedCoverTemplate = savedCover;
     if (savedContent) this.selectedContentTemplate = savedContent;
+
+    // 恢复水印设置
+    const savedAuthor = localStorage.getItem('xhs-author-name');
+    if (savedAuthor) this.authorName = savedAuthor;
+    const savedWatermark = localStorage.getItem('xhs-show-watermark');
+    if (savedWatermark !== null) this.showWatermark = savedWatermark === 'true';
   },
 
   watch: {
@@ -68,6 +77,14 @@ const app = createApp({
     },
     selectedContentTemplate(val) {
       localStorage.setItem('xhs-content-template', val);
+      this.autoRegenerate();
+    },
+    authorName(val) {
+      localStorage.setItem('xhs-author-name', val);
+      this.autoRegenerate();
+    },
+    showWatermark(val) {
+      localStorage.setItem('xhs-show-watermark', val);
       this.autoRegenerate();
     }
   },
@@ -256,7 +273,8 @@ const app = createApp({
           this.markdownInput,
           this.selectedCoverTemplate,
           this.selectedContentTemplate,
-          (_current, _total) => {}
+          (_current, _total) => {},
+          { watermark: this.showWatermark ? this.authorName.trim() : '' }
         );
         this.images = images;
         this.showToast(`成功生成 ${images.length} 张图片`, 'success');

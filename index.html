@@ -285,6 +285,35 @@
       color: var(--color-accent);
     }
 
+    /* Watermark input */
+    .watermark-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--color-border);
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-family: var(--font-sans);
+      color: var(--color-primary);
+      background: var(--color-surface);
+      outline: none;
+      transition: border-color 120ms;
+    }
+    .watermark-input:focus { border-color: var(--color-accent); }
+    .watermark-input::placeholder { color: #c2c2c7; }
+
+    .watermark-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--color-tertiary);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .watermark-toggle input { cursor: pointer; margin: 0; }
+
     /* Action Bar */
     .preview-actions {
       padding: 8px 14px;
@@ -533,6 +562,24 @@
                 @click="selectedContentTemplate = t.id"
               >{{ t.name }}</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Watermark -->
+        <div class="template-section">
+          <div class="template-row">
+            <span class="template-label">水印</span>
+            <input
+              class="watermark-input"
+              v-model="authorName"
+              placeholder="你的小红书昵称（留空则不显示）"
+              maxlength="20"
+              spellcheck="false"
+            />
+            <label class="watermark-toggle">
+              <input type="checkbox" v-model="showWatermark" />
+              <span>显示</span>
+            </label>
           </div>
         </div>
 

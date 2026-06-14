@@ -106,6 +106,7 @@ const XHS_TEMPLATES = {
     {
       id: 'gradient-bold',
       name: '渐变醒目',
+      darkBg: true,
       render(title, articleInfo) {
         const page = createBasePage('linear-gradient(145deg, #FF416C 0%, #FF4B2B 50%, #FF8C42 100%)');
         const fs = calcTitleSize(title);
@@ -175,6 +176,7 @@ const XHS_TEMPLATES = {
     {
       id: 'dark-premium',
       name: '暗黑高级',
+      darkBg: true,
       render(title, articleInfo) {
         const page = createBasePage('linear-gradient(170deg, #0c0c1d 0%, #1a1a2e 50%, #0f3460 100%)');
         const fs = calcTitleSize(title);
@@ -681,6 +683,7 @@ const XHS_TEMPLATES = {
     {
       id: 'guardian',
       name: '卫报',
+      darkBg: true,
       render(title, articleInfo) {
         const page = createBasePage('#052962');
         const fs = calcTitleSize(title);
@@ -1024,4 +1027,45 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+/**
+ * 判断颜色是否偏深（用于水印文字配色自适应）
+ */
+function isColorDark(color) {
+  if (!color || typeof color !== 'string' || color[0] !== '#') return false;
+  let hex = color.length === 4
+    ? color.slice(1).split('').map(c => c + c).join('')
+    : color.slice(1);
+  if (hex.length !== 6) return false;
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luma < 150;
+}
+
+/**
+ * 在页面左下角注入署名水印（横线 + @昵称）
+ * @param {HTMLElement} page - 页面根元素
+ * @param {string} text - 昵称（会自动加 @ 前缀）
+ * @param {boolean} isDark - 背景是否偏深（决定字色）
+ */
+function addWatermark(page, text, isDark) {
+  const name = (text || '').trim();
+  if (!name) return;
+  const label = name.startsWith('@') ? name : '@' + name;
+  const textColor = isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.42)';
+  const lineColor = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.22)';
+
+  const wm = createEl('div', {
+    style: `position:absolute;left:70px;bottom:75px;display:flex;flex-direction:column;gap:7px;z-index:5;`
+  });
+  wm.appendChild(createEl('div', {
+    style: `width:32px;height:2px;background:${lineColor};border-radius:1px;`
+  }));
+  wm.appendChild(createEl('div', {
+    style: `font-size:15px;color:${textColor};font-family:${FONTS.sans};letter-spacing:0.5px;font-weight:500;`
+  }, label));
+  page.appendChild(wm);
 }
