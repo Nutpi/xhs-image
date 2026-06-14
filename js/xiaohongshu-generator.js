@@ -232,10 +232,11 @@ const XHSGenerator = {
     const template = XHS_TEMPLATES.content.find(t => t.id === templateId) ||
                      XHS_TEMPLATES.content[0];
 
-    // 计算可用内容高度
+    // 计算可用内容高度（增加底部安全边距，防止最后一行被裁切）
     const topPadding = 80;
-    const bottomPadding = 100;
-    const pageHeight = this.HEIGHT - topPadding - bottomPadding;
+    const bottomPadding = 130;
+    const safetyMargin = 20;
+    const pageHeight = this.HEIGHT - topPadding - bottomPadding - safetyMargin;
 
     // 创建测量容器
     const measureContainer = document.createElement('div');
@@ -247,13 +248,17 @@ const XHSGenerator = {
     `;
     offscreen.appendChild(measureContainer);
 
-    // 为每个 block 创建样式化元素并测量高度
+    // 为每个 block 创建样式化元素并测量高度（含 margin）
     const elementsWithHeight = blocks.map(block => {
       const el = createStyledBlock(templateId, block);
       measureContainer.appendChild(el);
       const height = el.offsetHeight;
+      const cs = window.getComputedStyle(el);
+      const marginTop = parseFloat(cs.marginTop) || 0;
+      const marginBottom = parseFloat(cs.marginBottom) || 0;
+      const outerHeight = height + marginTop + marginBottom;
       measureContainer.removeChild(el);
-      return { block, element: el, height };
+      return { block, element: el, height: outerHeight, marginTop, marginBottom };
     });
 
     // 清理测量容器
