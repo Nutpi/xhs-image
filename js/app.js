@@ -73,30 +73,44 @@ const app = createApp({
     },
     selectedCoverTemplate(val) {
       localStorage.setItem('xhs-cover-template', val);
-      this.autoRegenerate();
+      this.scheduleRegenerate();
     },
     selectedContentTemplate(val) {
       localStorage.setItem('xhs-content-template', val);
-      this.autoRegenerate();
+      this.scheduleRegenerate();
     },
     authorName(val) {
       localStorage.setItem('xhs-author-name', val);
-      this.autoRegenerate();
+      this.scheduleRegenerate();
     },
     showWatermark(val) {
       localStorage.setItem('xhs-show-watermark', val);
-      this.autoRegenerate();
+      this.scheduleRegenerate();
     }
   },
 
   methods: {
     // ==================== 自动重新生成 ====================
 
-    autoRegenerate() {
-      // 如果有内容且之前已生成过图片，切换模板时自动重新生成
-      if (this.markdownInput.trim() && this.images.length > 0 && !this.generating) {
-        this.generateImages();
+    // 防抖重新生成：输入昵称、切换模板会频繁触发，需收敛到最后一次
+    scheduleRegenerate(delay = 500) {
+      clearTimeout(this._regenTimer);
+      this._regenTimer = setTimeout(() => this.performRegenerate(), delay);
+    },
+
+    performRegenerate() {
+      // 有内容且已生成过图片才重新生成
+      if (!this.markdownInput.trim() || this.images.length === 0) {
+        this._regenPending = false;
+        return;
       }
+      if (this.generating) {
+        // 正在生成中：排队，等当前生成结束后再跑一次，确保用上最新值（水印/模板）
+        this._regenPending = true;
+        return;
+      }
+      this._regenPending = false;
+      this.generateImages();
     },
 
     // ==================== 富文本粘贴 ====================
@@ -283,6 +297,11 @@ const app = createApp({
         this.showToast('生成失败: ' + error.message, 'error');
       } finally {
         this.generating = false;
+        // 处理生成期间被触发的重新生成（拿到最新的水印/模板）
+        if (this._regenPending) {
+          this._regenPending = false;
+          this.performRegenerate();
+        }
       }
     },
 
