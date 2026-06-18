@@ -70,6 +70,13 @@ const app = createApp({
   watch: {
     markdownInput(val) {
       localStorage.setItem('xhs-markdown-input', val);
+      if (!val.trim()) {
+        // 内容清空：清除旧图片，不生成
+        this.images = [];
+        return;
+      }
+      // 内容变化（防抖 800ms，比设置项更宽松，避免打字中途频繁触发）
+      this.scheduleRegenerate(800);
     },
     selectedCoverTemplate(val) {
       localStorage.setItem('xhs-cover-template', val);
