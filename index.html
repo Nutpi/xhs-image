@@ -172,6 +172,39 @@
       font-variant-numeric: tabular-nums;
     }
 
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* 实时预览开关 */
+    .live-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-accent);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .live-toggle input { display: none; }
+    .live-toggle.off { color: var(--color-tertiary); }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      box-shadow: 0 0 0 2px rgba(255,36,66,0.15);
+      transition: all 150ms;
+    }
+    .live-toggle.off .live-dot {
+      background: #c7c7cc;
+      box-shadow: none;
+    }
+
     .editor-textarea {
       flex: 1;
       width: 100%;
@@ -499,7 +532,14 @@
       <div class="editor-panel">
         <div class="editor-toolbar">
           <span class="editor-toolbar-title">✏️ Markdown</span>
-          <span class="char-count">{{ charCount }} 字</span>
+          <div class="toolbar-right">
+            <label class="live-toggle" :class="{ off: !livePreview }" :title="livePreview ? '实时预览：改动自动生成（内容失焦时）' : '手动模式：点「生成图片」才更新'">
+              <input type="checkbox" v-model="livePreview" />
+              <span class="live-dot"></span>
+              <span>{{ livePreview ? '实时' : '手动' }}</span>
+            </label>
+            <span class="char-count">{{ charCount }} 字</span>
+          </div>
         </div>
         <textarea
           class="editor-textarea"
@@ -516,7 +556,7 @@
 - 列表项 2
 
 > 引用文字会高亮显示"
-          @input="onInput"
+          @blur="onContentBlur"
           @paste="handleSmartPaste"
           spellcheck="false"
         ></textarea>

@@ -18,6 +18,8 @@ const app = createApp({
       // 水印署名
       authorName: '',
       showWatermark: true,
+      // 实时预览开关（关闭后只手动生成）
+      livePreview: true,
       // 模板列表
       coverTemplates: [],
       contentTemplates: [],
@@ -65,18 +67,14 @@ const app = createApp({
     if (savedAuthor) this.authorName = savedAuthor;
     const savedWatermark = localStorage.getItem('xhs-show-watermark');
     if (savedWatermark !== null) this.showWatermark = savedWatermark === 'true';
+    const savedLivePreview = localStorage.getItem('xhs-live-preview');
+    if (savedLivePreview !== null) this.livePreview = savedLivePreview === 'true';
   },
 
   watch: {
     markdownInput(val) {
       localStorage.setItem('xhs-markdown-input', val);
-      if (!val.trim()) {
-        // 内容清空：清除旧图片，不生成
-        this.images = [];
-        return;
-      }
-      // 内容变化（防抖 800ms，比设置项更宽松，避免打字中途频繁触发）
-      this.scheduleRegenerate(800);
+      // 内容变化不在这里自动生成，改为失焦时触发（见 onContentBlur）
     },
     selectedCoverTemplate(val) {
       localStorage.setItem('xhs-cover-template', val);
@@ -93,6 +91,11 @@ const app = createApp({
     showWatermark(val) {
       localStorage.setItem('xhs-show-watermark', val);
       this.scheduleRegenerate();
+    },
+    livePreview(val) {
+      localStorage.setItem('xhs-live-preview', val);
+      // 重新开启实时预览时，若有内容立即生成一次
+      if (val) this.scheduleRegenerate(150);
     }
   },
 
@@ -106,6 +109,11 @@ const app = createApp({
     },
 
     performRegenerate() {
+      // 关闭实时预览时，自动路径（内容失焦 / 水印 / 模板变化）都不生成，仅手动按钮可生成
+      if (!this.livePreview) {
+        this._regenPending = false;
+        return;
+      }
       // 只要左侧有内容，水印/开关/模板变化就自动生成或更新（无需先点"生成图片"）
       if (!this.markdownInput.trim()) {
         this._regenPending = false;
@@ -272,8 +280,13 @@ const app = createApp({
 
     // ==================== 生成与下载 ====================
 
-    onInput() {
-      // 内容变化时的处理
+    onContentBlur() {
+      // 内容失焦时触发更新：按键不生成，离开输入框才刷新，避免打字中途频繁生成
+      if (!this.markdownInput.trim()) {
+        this.images = [];
+        return;
+      }
+      this.performRegenerate();
     },
 
     async generateImages() {
