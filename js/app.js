@@ -99,8 +99,8 @@ const app = createApp({
     },
 
     performRegenerate() {
-      // 有内容且已生成过图片才重新生成
-      if (!this.markdownInput.trim() || this.images.length === 0) {
+      // 只要左侧有内容，水印/开关/模板变化就自动生成或更新（无需先点"生成图片"）
+      if (!this.markdownInput.trim()) {
         this._regenPending = false;
         return;
       }
